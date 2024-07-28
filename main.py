@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from models import TextToSpeechRequest
-from tts_utils import convert_text_to_audio
-from tts_models import tacotron2_model, hifigan_model, device
+from pytorchTacotron.tts_utils import convert_text_to_audio
+from pytorchTacotron.tts_models import tacotron2_model, hifigan_model, device
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
