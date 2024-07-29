@@ -1,8 +1,9 @@
 from fastapi import FastAPI, HTTPException
 from models import TextToSpeechRequest
-from pytorchTacotron.tts_utils import convert_text_to_audio
-from pytorchTacotron.tts_models import tacotron2_model, hifigan_model, device
+import coqui_aiModels.vits as vits
 from fastapi.middleware.cors import CORSMiddleware
+from const import MODEL_NAME
+
 
 app = FastAPI()
 app.add_middleware(
@@ -15,7 +16,8 @@ app.add_middleware(
 async def synthesize_speech(request: TextToSpeechRequest):
     """Convert text to speech and return the raw audio data as a hexadecimal string."""
     try:
-        audio_buffer = convert_text_to_audio(tacotron2_model, hifigan_model, device, request.text)
+        device = vits.init_device()
+        audio_buffer = vits.synthesize_speech(request.text, device=device, model_name=MODEL_NAME)
         audio_data = audio_buffer.read()
         audio_hex = audio_data.hex()
         return {"audio": audio_hex}
