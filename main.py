@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException
-from models import TextToSpeechRequest
+from models import TextToSpeechRequest, PollyTTSRequest
 import coqui_aiModels.vits as vits
 from fastapi.middleware.cors import CORSMiddleware
 from const import MODEL_NAME
@@ -14,7 +14,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-@app.post("/synthesize")
+@app.post("/standard")
 async def synthesize_speech(request: TextToSpeechRequest):
     """Convert text to speech and return the raw audio data as a hexadecimal string."""
     try:
@@ -26,14 +26,14 @@ async def synthesize_speech(request: TextToSpeechRequest):
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-@app.post("/synthesize_polly")
-def synthesize_speech(aws_access_key_id: str, aws_secret_access_key: str, region_name: str, request: TextToSpeechRequest):
+@app.post("/polly")
+def synthesize_polly_speech(request: PollyTTSRequest):
     try:
         polly_client = boto3.client(
             'polly',
-            aws_access_key_id=aws_access_key_id,
-            aws_secret_access_key=aws_secret_access_key,
-            region_name=region_name
+            aws_access_key_id=request.secretKey,
+            aws_secret_access_key=request.publicKey,
+            region_name=request.region
         )
         response = polly_client.synthesize_speech(
             Text=request.text,
