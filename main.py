@@ -4,8 +4,12 @@ import coqui_aiModels.vits as vits
 from fastapi.middleware.cors import CORSMiddleware
 from const import MODEL_NAME
 import boto3
+import logging
 from botocore.exceptions import BotoCoreError, ClientError
 
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = FastAPI()
 app.add_middleware(
@@ -28,26 +32,37 @@ async def synthesize_speech(request: TextToSpeechRequest):
 
 @app.post("/polly")
 def synthesize_polly_speech(request: PollyTTSRequest):
+    logger.info("Received request for Polly TTS synthesis")
+    logger.info(f"Request text: {request.text}")
+    logger.info(f"Using AWS region: {request.region}")
+    logger.info(f"Voice ID: {request.voice_id}")
+    
     try:
         polly_client = boto3.client(
             'polly',
-            aws_access_key_id=request.secretKey,
-            aws_secret_access_key=request.publicKey,
+            aws_access_key_id=request.publicKey,
+            aws_secret_access_key=request.secretKey,
             region_name=request.region
         )
+        logger.info("Polly client initialized successfully")
+
         response = polly_client.synthesize_speech(
             Text=request.text,
             OutputFormat='mp3',
             VoiceId=request.voice_id
         )
+        logger.info("Polly synthesis request sent successfully")
 
         if "AudioStream" in response:
             audio_stream = response["AudioStream"].read()
+            logger.info("Audio stream received successfully")
             return {"audio": audio_stream.hex()}
         else:
+            logger.error("Error in synthesizing speech: No AudioStream in response")
             raise HTTPException(status_code=500, detail="Error in synthesizing speech")
 
     except (BotoCoreError, ClientError) as error:
+        logger.error(f"Exception during Polly TTS synthesis: {error}")
         raise HTTPException(status_code=500, detail=str(error))
 
 if __name__ == "__main__":
