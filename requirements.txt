@@ -1,7 +1,9 @@
-nltk
-torch
-huggingface_hub==0.22.0
-nemo-toolkit[tts]
-ipython
-soundfile
+fastapi
+pydantic
+boto3
+botocore
 pydub
+torch
+TTS
+uvicorn
+
